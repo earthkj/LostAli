@@ -26,12 +26,12 @@ public class AutoFishing {
 		
 		// 찌 던질 좌표 100개 미리 만들어놓기
     	for(int i=0; i<100; i++) {
-    		int randomX = random.nextInt(100) + 1000;
+    		int offsetX = 1000;
+    		int offsetY = 100; // 위로 던질 땐 100, 아래로 던질땐 800 쯤
     		
-    		//밑으로 던질 때
-    		//int randomY = random.nextInt(100) + 800;
-    		//위로 던질때
-    		int randomY = random.nextInt(100) + 100;
+    		//offset ~ offset+100 사이에서 랜덤 좌표 생성
+    		int randomX = offsetX + random.nextInt(100);
+    		int randomY = offsetY + random.nextInt(100);
     		
     		this.regions.add(Region.create(randomX, randomY, 1, 1));
     	}
