@@ -9,6 +9,7 @@ import java.util.Random;
 
 import org.sikuli.script.Button;
 import org.sikuli.script.FindFailed;
+import org.sikuli.script.Match;
 import org.sikuli.script.ObserveEvent;
 import org.sikuli.script.ObserverCallBack;
 import org.sikuli.script.Pattern;
@@ -17,7 +18,9 @@ import org.sikuli.script.Region;
 public class AutoFishing {
 	
 	public final Region region = Region.create(900, 400, 100, 100);
-	public static Pattern searchImage = new Pattern("/src/resource/yellow_black.png").similar((float)0.7).mask();
+	public final Region fullScreen = Region.create(0, 0, 1920, 1080);
+	public static String resPath = "/src/resource/";
+	public static Pattern searchImage = new Pattern(resPath + "yellow_black.png").similar((float)0.7).mask();
 	List<Region> regions = new ArrayList<Region>();
 	Random random = new Random();
 	
@@ -43,10 +46,11 @@ public class AutoFishing {
     	//마우스 이동 + 우클릭
     	moveMouse();
     	//A 눌러서 찌 투척
+    	//TODO 생활 스킬탭이 활성화 되어있는지 확인하는 처리 추가
     	pressKey();
     	
     	//초당 Scan하는 횟수
-    	region.setWaitScanRate(20);
+    	region.setWaitScanRate(10);
     	
     	//발견 시
     	region.onAppear(searchImage, new ObserverCallBack() {
@@ -71,7 +75,7 @@ public class AutoFishing {
     	region.observe(30);
     }
     
-    /*
+    /**
      * 미리 만들어 놓은 랜덤 좌표 중 한 곳을 추출하여 우클릭
      */
     public void moveMouse() {
@@ -85,13 +89,64 @@ public class AutoFishing {
 		}
     }
     
-    /*
+    /**
      * 낚시 키 Press 이벤트 발생
      */
     public void pressKey() throws AWTException {
     	Robot robot = new Robot();
     	robot.keyPress(KeyEvent.VK_A);
     	robot.keyRelease(KeyEvent.VK_A);
+    }
+
+    /**
+     * 낚시대 리필
+     * @throws InterruptedException 
+     */
+    public boolean refillFishingRod() throws InterruptedException {
+    	boolean result = true;
+    	if(isFishingRodExist()) {
+    		//do nothing...
+    	}else {
+    		// 장착된 낚시대가 안보인다? 두가지 케이스가 있음.
+    		// 다 떨어졌거나, 캐릭터 정보를 안 띄워놨거나.
+    		// 일단 999짜리 여분 장착해보고, 그래도 못 찾으면 캐릭 정보창 꺼져있다고 판단하여 false 반환.
+    		
+    		Pattern spare = new Pattern(resPath + "rod_spare.jpg").similar((float)0.9);
+    		try {
+    			// 999짜리 여분 찾아서 장착(우클릭)
+				Match match = fullScreen.find(spare);
+				match.rightClick();
+				match.mouseMove(regions.get(0));
+				System.out.println("Refill Succeed");
+				Thread.sleep(1000);
+				// 다시 한 번 서치
+				if(!isFishingRodExist()) {
+					// 리필 했는데도 안 보인다는건 캐릭터 정보창이 꺼져있다는 의미이므로 더이상 하지 않는다.
+					System.out.println("Can not find Character Information Window");
+					result = false;
+				}
+			} catch (FindFailed e) {
+				System.out.println("Refill Failed : Spare not found..");
+				//장착중인 낚시대도 안 보이고 + 여분조차 안보인다면 => 더 이상 낚시를 시도하지 않아야 한다.
+				result = false;
+			}
+    	}
+    	return result;
+    }
+    
+    /**
+     * 장착중인 낚시대가 다 떨어졌는지 체크 
+     */
+    public boolean isFishingRodExist() {
+    	Pattern rodExist = new Pattern(resPath + "rod_exist.png").similar((float)0.95).mask();
+    	boolean isExist = false;
+    	try {
+			Match match = fullScreen.find(rodExist);
+			isExist = true;
+		} catch (FindFailed e) {
+			isExist = false;
+		}
+    	return isExist;
     }
 
 }

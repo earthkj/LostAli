@@ -18,7 +18,13 @@ public class App
         // 자동 낚시 무한 반복
         while(true) {
         	autoFishing = new AutoFishing();
-        	autoFishing.fishOnAppear();
+        	//낚시도구가 하나라도 남아있을 경우에만 낚시를 수행
+        	if(autoFishing.refillFishingRod()) {
+        		autoFishing.fishOnAppear();
+        	}else{
+        		//5초에 한번씩 재시도...
+        		Thread.sleep(5000);
+        	};
         }
     }
 
