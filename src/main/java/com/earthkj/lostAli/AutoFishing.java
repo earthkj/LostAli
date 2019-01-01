@@ -30,7 +30,7 @@ public class AutoFishing {
 		// 찌 던질 좌표 100개 미리 만들어놓기
     	for(int i=0; i<100; i++) {
     		int offsetX = 1000;
-    		int offsetY = 100; // 위로 던질 땐 100, 아래로 던질땐 800 쯤
+    		int offsetY = 800; // 위로 던질 땐 100, 아래로 던질땐 800 쯤
     		
     		//offset ~ offset+100 사이에서 랜덤 좌표 생성
     		int randomX = offsetX + random.nextInt(100);
@@ -104,49 +104,65 @@ public class AutoFishing {
      */
     public boolean refillFishingRod() throws InterruptedException {
     	boolean result = true;
-    	if(isFishingRodExist()) {
-    		//do nothing...
+    	// 
+    	if(isEquipmentWindowExist()) {
+    		// 장비창이 있는데, 낚시대가 비어있을 경우
+    		if(isRodEmpty()) {
+    			Pattern spare = new Pattern(resPath + "rod_spare.jpg").similar((float)0.9);
+        		try {
+        			// 999짜리 여분 찾아서 장착(우클릭)
+    				Match match = fullScreen.find(spare);
+    				match.rightClick();
+    				match.mouseMove(regions.get(0));
+    				System.out.println("낚시대 리필 완료");
+    				Thread.sleep(1000);
+    			} catch (FindFailed e) {
+    				System.out.println("여분의 낚시대가 없습니다");
+    				//여분이 없다면 더 이상 낚시를 시도하지 않아야 한다.
+    				result = false;
+    			}
+    		}else {
+    			// 낚시대가 있다면 아무것도 할 필요는 없다....
+    		}
     	}else {
-    		// 장착된 낚시대가 안보인다? 두가지 케이스가 있음.
-    		// 다 떨어졌거나, 캐릭터 정보를 안 띄워놨거나.
-    		// 일단 999짜리 여분 장착해보고, 그래도 못 찾으면 캐릭 정보창 꺼져있다고 판단하여 false 반환.
-    		
-    		Pattern spare = new Pattern(resPath + "rod_spare.jpg").similar((float)0.9);
-    		try {
-    			// 999짜리 여분 찾아서 장착(우클릭)
-				Match match = fullScreen.find(spare);
-				match.rightClick();
-				match.mouseMove(regions.get(0));
-				System.out.println("Refill Succeed");
-				Thread.sleep(1000);
-				// 다시 한 번 서치
-				if(!isFishingRodExist()) {
-					// 리필 했는데도 안 보인다는건 캐릭터 정보창이 꺼져있다는 의미이므로 더이상 하지 않는다.
-					System.out.println("Can not find Character Information Window");
-					result = false;
-				}
-			} catch (FindFailed e) {
-				System.out.println("Refill Failed : Spare not found..");
-				//장착중인 낚시대도 안 보이고 + 여분조차 안보인다면 => 더 이상 낚시를 시도하지 않아야 한다.
-				result = false;
-			}
+    		System.out.println("장비창(P)이 활성화 되어있지 않습니다.");
+			result = false;
     	}
     	return result;
     }
     
     /**
-     * 장착중인 낚시대가 다 떨어졌는지 체크 
+     * 장비창이 열려있는지 확인 
      */
-    public boolean isFishingRodExist() {
+    public boolean isEquipmentWindowExist() {
     	Pattern rodExist = new Pattern(resPath + "rod_exist.png").similar((float)0.95).mask();
+    	Pattern rodEquipment = new Pattern(resPath + "rod_equipment.jpg").similar((float)0.95);
+    	
     	boolean isExist = false;
     	try {
-			Match match = fullScreen.find(rodExist);
+			Match match = fullScreen.find(rodEquipment);
 			isExist = true;
 		} catch (FindFailed e) {
 			isExist = false;
 		}
     	return isExist;
+    }
+    
+    /**
+     * 장비창에 낚시대가 비어있는지 확인
+     * @return
+     */
+    public boolean isRodEmpty() {
+    	Pattern rodEmpty = new Pattern(resPath + "rod_empty.jpg").similar((float)0.9);
+    	boolean isEmpty = false;
+    	try {
+    		//낚시대 장비칸이 비어있는게 발견되면 => true
+			Match match = fullScreen.find(rodEmpty);
+			isEmpty = true;
+		} catch (FindFailed e) {
+			isEmpty = false;
+		}
+    	return isEmpty;
     }
 
 }
