@@ -9,6 +9,7 @@ import java.util.Random;
 
 import org.sikuli.script.Button;
 import org.sikuli.script.FindFailed;
+import org.sikuli.script.Key;
 import org.sikuli.script.Match;
 import org.sikuli.script.ObserveEvent;
 import org.sikuli.script.ObserverCallBack;
@@ -163,6 +164,44 @@ public class AutoFishing {
 			isEmpty = false;
 		}
     	return isEmpty;
+    }
+    
+    public void makeRod() throws FindFailed, InterruptedException, AWTException {
+    	Pattern make_plus = new Pattern(resPath + "make_plus.png").similar((float)0.95).mask();
+    	Pattern make_create = new Pattern(resPath + "make_create.png").similar((float)0.95).mask();
+    	Pattern make_receive = new Pattern(resPath + "make_receive.png").similar((float)0.9).mask();
+    	
+    	//수량 10개로 증가
+    	Match btnPlus = fullScreen.find(make_plus);
+    	for(int i=0; i<9; i++) {
+    		btnPlus.click();
+    	}
+    	
+    	//의뢰하기
+    	Match btnCreate = fullScreen.find(make_create);
+    	btnCreate.click();
+    	Thread.sleep(500);
+    	
+    	//확인 (enter)
+    	Robot robot = new Robot();
+    	robot.keyPress(KeyEvent.VK_ENTER);
+    	robot.keyRelease(KeyEvent.VK_ENTER);
+    	
+    	//20초 기다리기
+    	Thread.sleep(20000);
+    	
+    	//받기
+    	fullScreen.onAppear(make_receive, new ObserverCallBack() {
+    		@Override
+    		public void appeared(ObserveEvent event) {
+	    		event.getMatch().click();
+	    		fullScreen.stopObserver();
+    	    		
+    		}
+    	});
+    	fullScreen.observe(5);
+    	
+    	Thread.sleep(1000);
     }
 
 }
