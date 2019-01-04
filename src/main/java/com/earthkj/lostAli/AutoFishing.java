@@ -173,9 +173,7 @@ public class AutoFishing {
     	
     	//수량 10개로 증가
     	Match btnPlus = fullScreen.find(make_plus);
-    	for(int i=0; i<9; i++) {
-    		btnPlus.click();
-    	}
+   		btnPlus.click(new Region(btnPlus.x-5, btnPlus.y+13));
     	
     	//의뢰하기
     	Match btnCreate = fullScreen.find(make_create);
