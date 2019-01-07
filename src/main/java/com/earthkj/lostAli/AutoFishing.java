@@ -20,6 +20,8 @@ public class AutoFishing {
 	
 	public final Region region = Region.create(900, 400, 100, 100);
 	public final Region fullScreen = Region.create(0, 0, 1920, 1080);
+	public final Region toomangRegion = Region.create(440, 110, 200, 450);
+	public final Region tongbalRegion = Region.create(0, 0, 350, 150);
 	public static String resPath = "/src/resource/";
 	public static Pattern searchImage = new Pattern(resPath + "yellow_black.png").similar((float)0.7).mask();
 	List<Region> regions = new ArrayList<Region>();
@@ -31,7 +33,7 @@ public class AutoFishing {
 		// 찌 던질 좌표 100개 미리 만들어놓기
     	for(int i=0; i<100; i++) {
     		int offsetX = 1000;
-    		int offsetY = 800; // 위로 던질 땐 100, 아래로 던질땐 800 쯤
+    		int offsetY = 100; // 위로 던질 땐 100, 아래로 던질땐 800 쯤
     		
     		//offset ~ offset+100 사이에서 랜덤 좌표 생성
     		int randomX = offsetX + random.nextInt(100);
@@ -48,7 +50,7 @@ public class AutoFishing {
     	moveMouse();
     	//A 눌러서 찌 투척
     	//TODO 생활 스킬탭이 활성화 되어있는지 확인하는 처리 추가
-    	pressKey();
+    	pressKey(KeyEvent.VK_A);
     	
     	//초당 Scan하는 횟수
     	region.setWaitScanRate(10);
@@ -60,7 +62,7 @@ public class AutoFishing {
     			System.out.println("succeed : " + event.getMatch().x + ", " + event.getMatch().y);
     	    	try {
     	    		//찌 회수
-    	    		pressKey();
+    	    		pressKey(KeyEvent.VK_A);
     	    		//회수 모션동안 sleep
 					Thread.sleep(6000);
 					region.stopObserver();
@@ -93,10 +95,10 @@ public class AutoFishing {
     /**
      * 낚시 키 Press 이벤트 발생
      */
-    public void pressKey() throws AWTException {
+    public void pressKey(int keyEvent) throws AWTException {
     	Robot robot = new Robot();
-    	robot.keyPress(KeyEvent.VK_A);
-    	robot.keyRelease(KeyEvent.VK_A);
+    	robot.keyPress(keyEvent);
+    	robot.keyRelease(keyEvent);
     }
 
     /**
@@ -200,6 +202,93 @@ public class AutoFishing {
     	fullScreen.observe(5);
     	
     	Thread.sleep(1000);
+    }
+    
+    public void mikki() throws InterruptedException, AWTException {
+    	Pattern imgMikki = new Pattern(resPath + "mikki.png").similar((float)0.95).mask();
+    	try {
+			Match mikki = fullScreen.find(imgMikki);
+			//마우스 이동 + 우클릭
+	    	moveMouse();
+	    	//D 눌러서 미끼 뿌리기
+	    	pressKey(KeyEvent.VK_D);
+	    	Thread.sleep(5000);
+		} catch (FindFailed e) {
+			System.out.println("미끼가 없습니다");
+		}
+    }
+    
+    public void toomang() throws AWTException, InterruptedException {
+    	Pattern imgZzarit = new Pattern(resPath + "zzarit.png").similar((float)0.9);
+    	
+    	//투망 시작 신호 감지
+    	try {
+			Match zzarit = fullScreen.find(imgZzarit);
+			System.out.println("투망 준비!");
+			//마우스 이동 + 우클릭
+	    	moveMouse();
+	    	
+	    	//S 눌러서 투망
+	    	pressKey(KeyEvent.VK_S);
+	    	
+	    	//3초 대기
+	    	Thread.sleep(4000);
+	    	
+	    	Thread.sleep(4000);
+	    	for(int i=0; i<25; i++) {
+				try {
+			    	//스페이스 연타 over 3초?
+					pressKey(KeyEvent.VK_SPACE);
+					Thread.sleep(240);
+				} catch (AWTException e) {
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+	    	
+	    	//후딜 대기 5초
+	    	Thread.sleep(6000);
+		} catch (FindFailed e) {
+		}
+    }
+    
+    public void tongbal() throws AWTException, InterruptedException {
+    	Pattern imgSetupIcon = new Pattern(resPath + "tongbal_setup_icon.png").similar((float)0.9);
+    	Pattern imgSetupInfo = new Pattern(resPath + "tongbal_setup_info.png").similar((float)0.9);
+    	Pattern imgFull = new Pattern(resPath + "tongbal_full.png").similar((float)0.9);
+
+    	try {
+    		//설치물 존재 여부 확인
+			Match icon = tongbalRegion.find(imgSetupIcon);
+			try {
+				Match info = tongbalRegion.find(imgSetupInfo);
+				//설치물 있고 && 설치물 상태 확인 가능하고
+				try {
+					Match full = tongbalRegion.find(imgFull);
+					// && 수확 가능이면 => 수확
+					System.out.println("통발 수확");
+					moveMouse();
+					pressKey(KeyEvent.VK_G);
+		    		Thread.sleep(5000);
+		    		//회수후 바로 재설치까지 하면 짜릿한 버프가 끊기게 되서, 다음 턴에 알아서 재시도 함. 
+				}catch(Exception e) {
+					//대기중인 통발
+				}
+			}catch(Exception e) {
+				//있는데, 설치물 상태 확인 안되면 => 설치물 상세창 띄우기 = 아이콘 클릭
+				icon.click();
+			}
+    	}catch(Exception e) {
+    		//설치물 없으면 설치
+    		System.out.println("통발 설치!");
+    		moveMouse();
+    		//G 누르기
+    		pressKey(KeyEvent.VK_G);
+    		//대기
+    		Thread.sleep(5000);
+    		//아이콘 눌러서 info창 띄우기
+    	}
     }
 
 }
